@@ -82,6 +82,16 @@ class Head(nn.Module):
         out = wei @ v # (B, T, T) @ (B, T, C) -> (B, T, C)
         return out # the contextualized embeddings for each token (batch B, sequence length T, emb‑dim C)
 
+class MultiHeadAttention(nn.Module):
+    """ multiple heads of self-attention in parallel """
+
+    def __init__(self, num_heads, head_size):
+        super().__init__()
+        self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
+
+    def forward(self, x):
+        return torch.cat([h(x) for h in self.heads], dim=-1)
+
 # super simple bigram model
 class BigramLanguageModel(nn.Module):
 
@@ -90,7 +100,7 @@ class BigramLanguageModel(nn.Module):
         # each token directly reads off the logits for the next token from a lookup table
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
         self.position_embedding_table = nn.Embedding(block_size, n_embd)
-        self.sa_head = Head(n_embd)
+        self.sa_heads = MultiHeadAttention(4, n_embd // 4)
         self.lm_head = nn.Linear(n_embd, vocab_size) # language-modeling head. Turns hidden embeddings into logit scores
 
     def forward(self, idx, targets=None):
@@ -99,7 +109,7 @@ class BigramLanguageModel(nn.Module):
         tok_emb = self.token_embedding_table(idx) # (B,T,C). Lookup token embeddings for each index
         pos_emb = self.position_embedding_table(torch.arange(T, device=device)) # (T,C). Lookup learned positional embeddings for each of the T positions
         x = tok_emb + pos_emb # (B,T,C). In practice, learned token and positional embeddings tend to end up somewhat orthogonal to eachother in high dimensional space. This means the sum of the two vectors contains meaningful information and is roughly one-to-one.
-        x = self.sa_head(x) # apply one head of self-attention. (B,T,C). Calls the forward() function to produce the attention-updated representations
+        x = self.sa_heads(x) # apply multiple heads of self-attention. (B,T,C). Calls the forward() function to produce the attention-updated representations
         logits = self.lm_head(x) # (B,T,vocab_size). Apply the learned linear layer weights to convert embeddings into logit scores for each possible token
 
         if targets is None: # if in inference, don't compute loss. (No provided correct answers)
