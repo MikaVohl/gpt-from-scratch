@@ -67,7 +67,7 @@ class Head(nn.Module):
         self.key = nn.Linear(n_embd, head_size, bias=False) # initializes a weight matrix for key
         self.query = nn.Linear(n_embd, head_size, bias=False) # initializes a weight matrix for query
         self.value = nn.Linear(n_embd, head_size, bias=False) # initializes a weight matrix for value
-        self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size))) # stores the lower triangular matrix but doesn't update it with gradient descent
+        self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size))) # stores the lower triangular matrix but doesn't update it with gradient descent (not a parameter, rather a 'buffer')
 
     def forward(self, x):
         B,T,C = x.shape # shape of input data. Batch, Time, and Channel dimension
