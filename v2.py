@@ -88,9 +88,40 @@ class MultiHeadAttention(nn.Module):
     def __init__(self, num_heads, head_size):
         super().__init__()
         self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
+        self.proj = nn.Linear(n_embd, n_embd)
 
     def forward(self, x):
-        return torch.cat([h(x) for h in self.heads], dim=-1)
+        out = torch.cat([h(x) for h in self.heads], dim=-1)
+        out = self.proj(out)
+        return out
+
+class FeedForward(nn.Module):
+    """ a simple linear layer followed by a non-linearity """
+    
+    def __init__(self, n_embd):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_embd, 4 * n_embd),
+            nn.ReLU(),
+            nn.Linear(4 * n_embd, n_embd),
+        )
+    
+    def forward(self, x):
+        return self.net(x)
+    
+class Block(nn.Module):
+    """ Transformer Block """
+
+    def __init__(self, n_embd, n_head):
+        super().__init__()
+        head_size = n_embd // n_head
+        self.sa = MultiHeadAttention(n_head, head_size)
+        self.ffwd = FeedForward(n_embd)
+
+    def forward(self, x):
+        x = x + self.sa(x)
+        x = x + self.ffwd(x)
+        return x
 
 # super simple bigram model
 class BigramLanguageModel(nn.Module):
@@ -100,7 +131,11 @@ class BigramLanguageModel(nn.Module):
         # each token directly reads off the logits for the next token from a lookup table
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
         self.position_embedding_table = nn.Embedding(block_size, n_embd)
-        self.sa_heads = MultiHeadAttention(4, n_embd // 4)
+        self.blocks = nn.Sequential(
+            Block(n_embd, n_head=4),
+            Block(n_embd, n_head=4),
+            Block(n_embd, n_head=4),
+        )
         self.lm_head = nn.Linear(n_embd, vocab_size) # language-modeling head. Turns hidden embeddings into logit scores
 
     def forward(self, idx, targets=None):
@@ -109,7 +144,7 @@ class BigramLanguageModel(nn.Module):
         tok_emb = self.token_embedding_table(idx) # (B,T,C). Lookup token embeddings for each index
         pos_emb = self.position_embedding_table(torch.arange(T, device=device)) # (T,C). Lookup learned positional embeddings for each of the T positions
         x = tok_emb + pos_emb # (B,T,C). In practice, learned token and positional embeddings tend to end up somewhat orthogonal to eachother in high dimensional space. This means the sum of the two vectors contains meaningful information and is roughly one-to-one.
-        x = self.sa_heads(x) # apply multiple heads of self-attention. (B,T,C). Calls the forward() function to produce the attention-updated representations
+        x = self.blocks(x)
         logits = self.lm_head(x) # (B,T,vocab_size). Apply the learned linear layer weights to convert embeddings into logit scores for each possible token
 
         if targets is None: # if in inference, don't compute loss. (No provided correct answers)
