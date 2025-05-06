@@ -3,14 +3,17 @@ import torch.nn as nn # Pytorch's neural network library. Needed for layer, embe
 from torch.nn import functional as F # Pytorch's functional library for stateless methods for neural network operations. F.softmax, F.cross_entropy
 
 # hyperparameters
-batch_size = 32 # how many independent sequences will we process in parallel?
-block_size = 8 # what is the maximum context length for predictions? Will look at only the past {block_size} characters when generating a new one
+batch_size = 64 # how many independent sequences will we process in parallel?
+block_size = 256 # what is the maximum context length for predictions? Will look at only the past {block_size} characters when generating a new one
 max_iters = 5000 # Iterations for training
 eval_interval = 500 # interval for which the loss will be printed to the console
-learning_rate = 1e-3 # gradient descent learning rate (through Adam optimizer)
+learning_rate = 3e-4 # gradient descent learning rate (through Adam optimizer)
 device = 'cuda' if torch.cuda.is_available() else 'cpu' # allows for using GPU if available
 eval_iters = 200 # iterations for evaluation function
-n_embd = 32 # dimension of the embedding space. Each character/token will have its own learned position in this embedding space. (a vector in 32 dimensions)
+n_embd = 384 # dimension of the embedding space. Each character/token will have its own learned position in this embedding space. (a vector in 32 dimensions)
+n_head = 6
+n_layer = 6
+dropout = 0.2
 # ------------
 
 # torch.manual_seed(1337) # Manually set seed for the sake of consistent comparison between computers and executions.
@@ -69,6 +72,8 @@ class Head(nn.Module):
         self.value = nn.Linear(n_embd, head_size, bias=False) # initializes a weight matrix for value
         self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size))) # stores the lower triangular matrix but doesn't update it with gradient descent (not a parameter, rather a 'buffer')
 
+        self.dropout = nn.Dropout(dropout)
+
     def forward(self, x):
         B,T,C = x.shape # shape of input data. Batch, Time, and Channel dimension
         k = self.key(x)   # (B,T,C). Apply the key matrix to the input data
@@ -77,6 +82,7 @@ class Head(nn.Module):
         wei = q @ k.transpose(-2,-1) * C**-0.5 # (B, T, C) @ (B, C, T) -> (B, T, T)
         wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf')) # (B, T, T)
         wei = F.softmax(wei, dim=-1) # (B, T, T). Now wei contains the normalized weights to assign to each token's value vector
+        wei = self.dropout(wei)
         # perform the weighted aggregation of the values
         v = self.value(x) # (B,T,C)
         out = wei @ v # (B, T, T) @ (B, T, C) -> (B, T, C)
@@ -89,6 +95,7 @@ class MultiHeadAttention(nn.Module):
         super().__init__()
         self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
         self.proj = nn.Linear(n_embd, n_embd)
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
         out = torch.cat([h(x) for h in self.heads], dim=-1)
@@ -104,6 +111,7 @@ class FeedForward(nn.Module):
             nn.Linear(n_embd, 4 * n_embd),
             nn.ReLU(),
             nn.Linear(4 * n_embd, n_embd),
+            nn.Dropout(dropout),
         )
     
     def forward(self, x):
@@ -117,10 +125,12 @@ class Block(nn.Module):
         head_size = n_embd // n_head
         self.sa = MultiHeadAttention(n_head, head_size)
         self.ffwd = FeedForward(n_embd)
+        self.ln1 = nn.LayerNorm(n_embd)
+        self.ln2 = nn.LayerNorm(n_embd)
 
     def forward(self, x):
-        x = x + self.sa(x)
-        x = x + self.ffwd(x)
+        x = x + self.sa(self.ln1(x))
+        x = x + self.ffwd(self.ln2(x))
         return x
 
 # super simple bigram model
@@ -131,11 +141,8 @@ class BigramLanguageModel(nn.Module):
         # each token directly reads off the logits for the next token from a lookup table
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
         self.position_embedding_table = nn.Embedding(block_size, n_embd)
-        self.blocks = nn.Sequential(
-            Block(n_embd, n_head=4),
-            Block(n_embd, n_head=4),
-            Block(n_embd, n_head=4),
-        )
+        self.blocks = nn.Sequential(*[Block(n_embd, n_head=n_head) for _ in range(n_layer)])
+        self.ln_f = nn.LayerNorm(n_embd)
         self.lm_head = nn.Linear(n_embd, vocab_size) # language-modeling head. Turns hidden embeddings into logit scores
 
     def forward(self, idx, targets=None):
