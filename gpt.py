@@ -3,17 +3,17 @@ import torch.nn as nn # Pytorch's neural network library. Needed for layer, embe
 from torch.nn import functional as F # Pytorch's functional library for stateless methods for neural network operations. F.softmax, F.cross_entropy
 
 # hyperparameters
-batch_size = 64 # how many independent sequences will we process in parallel?
-block_size = 256 # what is the maximum context length for predictions? Will look at only the past {block_size} characters when generating a new one
-max_iters = 5000 # Iterations for training
+batch_size = 16 # how many independent sequences will we process in parallel?
+block_size = 16 # what is the maximum context length for predictions? Will look at only the past {block_size} characters when generating a new one
+max_iters = 10000 # Iterations for training
 eval_interval = 500 # interval for which the loss will be printed to the console
-learning_rate = 3e-4 # gradient descent learning rate (through Adam optimizer)
+learning_rate = 7e-4 # gradient descent learning rate (through Adam optimizer)
 device = 'cuda' if torch.cuda.is_available() else 'cpu' # allows for using GPU if available
 eval_iters = 200 # iterations for evaluation function
-n_embd = 384 # dimension of the embedding space. Each character/token will have its own learned position in this embedding space. (a vector in 32 dimensions)
-n_head = 6
+n_embd = 64 # dimension of the embedding space. Each character/token will have its own learned position in this embedding space. (a vector in 32 dimensions)
+n_head = 4
 n_layer = 6
-dropout = 0.2
+dropout = 0.05
 # ------------
 
 # torch.manual_seed(1337) # Manually set seed for the sake of consistent comparison between computers and executions.
