@@ -4,16 +4,6 @@
 *This code is focused on the pretraining aspect of GPT-3 and pays less attention to the more resource-intensive of fine tuning supervised fine tuning (SFT) and reinforcement learning with human feedback (RLHF)*
 
 ---
-
-## Features
-This Large Language Model implementation uses many vital aspects of frontier models or simplified versions to conserve resources.
-- Character-level tokenization
-- Multi-headed self-attention
-- Feed-forward layers
-- Layer norm
-- Adjustable hyperparameters
-
----
 ## Example Output
 *Achieved on Intel-Based MacBook Pro with the following hyperparameters and approximately 5 minutes training time.*
 ### Hyperparameters:
@@ -53,6 +43,17 @@ I change must brotther before;
 Only gonely! Of marry mant life thy villaniaguinus peals
 'Deel to he king gest off them.
 ```
+*This output is shakespeare-like but it's english is incomprehensible due to a lack of compute resources which constrained me to a smaller model architecture*
+
+---
+
+## Features
+This Large Language Model implementation uses many vital aspects of frontier models or simplified versions to conserve resources.
+- Character-level tokenization
+- Multi-headed self-attention
+- Feed-forward layers
+- Layer norm
+- Adjustable hyperparameters
 
 ---
 
