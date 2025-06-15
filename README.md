@@ -5,45 +5,49 @@
 
 ---
 ## Example Output
-*Achieved on Intel-Based MacBook Pro with the following hyperparameters and approximately 5 minutes training time.*
+*Achieved on a Kaggle Notebook instance using a P100 GPU with the following hyperparameters and approximately 10 minutes training time.*
 ### Hyperparameters:
 ```
-batch_size = 16, block_size = 16, max_iters = 10000
-eval_interval = 500, learning_rate = 7e-4, eval_iters = 200
-n_embd = 64, n_head = 4, n_layer = 6, dropout = 0.05
+batch_size = 256, block_size = 32, max_iters = 10000
+eval_interval = 1000, learning_rate = 3e-4, eval_iters = 20,
+n_embd = 128, n_head = 8, n_layer = 8, dropout = 0.1
 ```
 ### Loss:
 ```
-step 0: train loss 4.5225, val loss 4.5241  
-step 500: train loss 2.3356, val loss 2.3550  
-step 1000: train loss 2.1512, val loss 2.1794  
-step 1500: train loss 2.0501, val loss 2.1052  
-...  
-step 8000: train loss 1.6969, val loss 1.8560  
-step 8500: train loss 1.6901, val loss 1.8485  
-step 9000: train loss 1.6760, val loss 1.8468  
-step 9500: train loss 1.6764, val loss 1.8324  
+step 0: train loss 4.6352, val loss 4.6392
+step 1000: train loss 1.7505, val loss 1.8864
+step 2000: train loss 1.5438, val loss 1.7098
+step 3000: train loss 1.4454, val loss 1.6519
+step 4000: train loss 1.3937, val loss 1.6068
+step 5000: train loss 1.3626, val loss 1.5881
+step 6000: train loss 1.3304, val loss 1.5751
+step 7000: train loss 1.3013, val loss 1.5716
+step 8000: train loss 1.2843, val loss 1.5696
+step 9000: train loss 1.2679, val loss 1.5492  
 ```
 ### Output:
 ```
-Of eyes with will friends fwifever?
+MENENIUS:
+Brat God's subject, put now, rate their minds
+You beseeming and fouler; but your own men, instruments, well-benefit
+To strive ought she is, and vialet, desires to very grass.
 
-PULIXRLAND:
-A praint him ready;
-Wherefammend instay and there come, Gawdow yet would speak;
-Speell, it we mate thy ndwuer,
-Theld my dire he gones may bring the see;
-And tywith onle.
-If I do beseen wred? it live he sI cannot is, and songry
-no in this bith
-Mhe eybred regove rests respares our sleaving heave and Her discors.
+ROMEO:
+And she that words me arrived and love;
+If every incense, nor heights, it fall.
 
-WOXINABEL:
-I change must brotther before;
-Only gonely! Of marry mant life thy villaniaguinus peals
-'Deel to he king gest off them.
+LADY CAMILLO:
+No, Jesit she!
+
+ANDIUS:
+O respect Now misfortune.
+
+QUEEN ELIZABETH:
+O, the sweet Duke of Landalm hold a flesh required minibers of accuse
+For brothers; Need sir, for my banishment
+As I can my brains in else wide 
 ```
-*This output is shakespeare-like but it's english is incomprehensible due to a lack of compute resources which constrained me to a smaller model architecture*
+*This output is shakespeare-like and uses roughly proper english, but does not make for a good story. Extending the context length, MLP layers, attention heads, and training epochs would likely improve the results*
 
 ---
 
